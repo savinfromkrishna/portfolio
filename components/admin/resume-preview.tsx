@@ -10452,12 +10452,15 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
     items && items.length ? (
       <ul style={{ margin: "5px 0 0", padding: 0, listStyle: "none" }}>
         {items.map((it, i) => (
+          // Flex (not absolute-positioned) marker so the bullet paints in normal
+          // DOM order — keeps each bullet attached to its entry in the PDF text
+          // layer, which is what ATS parsers read.
           <li
             key={i}
-            style={{ fontSize: fs.body, color: sub, lineHeight: 1.5, paddingLeft: "14px", position: "relative", marginBottom: "3px" }}
+            style={{ display: "flex", gap: "8px", fontSize: fs.body, color: sub, lineHeight: 1.5, marginBottom: "3px", breakInside: "avoid" }}
           >
-            <span style={{ position: "absolute", left: 0, top: "6px", width: "5px", height: "5px", borderRadius: "1px", backgroundColor: accent }} />
-            {it}
+            <span style={{ flexShrink: 0, marginTop: "6px", width: "5px", height: "5px", borderRadius: "1px", backgroundColor: accent }} />
+            <span style={{ minWidth: 0 }}>{it}</span>
           </li>
         ))}
       </ul>
