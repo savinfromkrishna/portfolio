@@ -10382,10 +10382,14 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
   const fs = getFontSize(config.fontSize)
   const accent = config.accentColor
   const p = config.profile
-  const ink = "#1a1a1a"
-  const sub = "#4b5563"
+  const ink = "#111827"
+  const sub = "#374151"
   const muted = "#6b7280"
-  const dash = "1px dashed #d1d5db"
+  const faint = "#9ca3af"
+  const line = "#e5e7eb"
+  const dash = "1px dashed #e2e5ea"
+  const accentSoft = `${accent}14`
+  const accentBorder = `${accent}33`
   const pad = config.pagePadding ?? 40
 
   const enabledExp = config.experiences.filter((e) => e.enabled)
@@ -10435,21 +10439,13 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
   }
 
   const SectionHead = ({ children, first }: { children: React.ReactNode; first?: boolean }) => (
-    <h2
-      style={{
-        fontSize: fs.h2,
-        fontWeight: 700,
-        textTransform: "uppercase",
-        color: ink,
-        borderBottom: `2px solid ${ink}`,
-        paddingBottom: "3px",
-        marginTop: first ? 0 : "20px",
-        marginBottom: "10px",
-        letterSpacing: "0.3px",
-      }}
-    >
-      {children}
-    </h2>
+    <div style={{ display: "flex", alignItems: "center", gap: "9px", marginTop: first ? 0 : "17px", marginBottom: "9px", breakInside: "avoid" }}>
+      <span style={{ width: "7px", height: "7px", borderRadius: "2px", backgroundColor: accent, transform: "rotate(45deg)", flexShrink: 0 }} />
+      <h2 style={{ fontSize: fs.h2, fontWeight: 700, textTransform: "uppercase", color: ink, letterSpacing: "0.9px", margin: 0, whiteSpace: "nowrap" }}>
+        {children}
+      </h2>
+      <span style={{ flex: 1, height: "1px", backgroundColor: line }} />
+    </div>
   )
 
   const Bullets = ({ items }: { items: string[] }) =>
@@ -10458,37 +10454,21 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
         {items.map((it, i) => (
           <li
             key={i}
-            style={{ fontSize: fs.body, color: sub, lineHeight: 1.5, paddingLeft: "13px", position: "relative", marginBottom: "3px" }}
+            style={{ fontSize: fs.body, color: sub, lineHeight: 1.5, paddingLeft: "14px", position: "relative", marginBottom: "3px" }}
           >
-            <span style={{ position: "absolute", left: 0, top: "6px", width: "4px", height: "4px", borderRadius: "50%", backgroundColor: ink }} />
+            <span style={{ position: "absolute", left: 0, top: "6px", width: "5px", height: "5px", borderRadius: "1px", backgroundColor: accent }} />
             {it}
           </li>
         ))}
       </ul>
     ) : null
 
-  const MetaRow = ({ date, location }: { date?: string; location?: string }) =>
-    date || location ? (
-      <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", fontSize: fs.small, color: muted, margin: "3px 0 5px" }}>
-        {date && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-            <IconCalendar color={muted} size={11} />
-            {date}
-          </span>
-        )}
-        {location && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-            <IconMapPin color={muted} size={11} />
-            {location}
-          </span>
-        )}
-      </div>
-    ) : null
+  // Dates are rendered inline on each entry's title row (more compact).
 
   const LangBar = ({ count }: { count: number }) => (
     <div style={{ display: "flex", gap: "3px", flexShrink: 0 }}>
       {[0, 1, 2, 3, 4].map((i) => (
-        <span key={i} style={{ width: "6px", height: "15px", borderRadius: "1px", backgroundColor: i < count ? accent : "#d8dce1" }} />
+        <span key={i} style={{ width: "15px", height: "4px", borderRadius: "2px", backgroundColor: i < count ? accent : "#e5e7eb" }} />
       ))}
     </div>
   )
@@ -10506,7 +10486,7 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
               borderBottom: i < items.length - 1 ? dash : "none",
             }}
           >
-            {head && <div style={{ fontSize: fs.body, fontWeight: 700, color: ink, marginBottom: "2px" }}>{head}</div>}
+            {head && <div style={{ fontSize: fs.body, fontWeight: 700, color: accent, marginBottom: "2px" }}>{head}</div>}
             <p style={{ fontSize: fs.body, color: sub, lineHeight: 1.5, margin: 0 }}>{body}</p>
           </div>
         )
@@ -10526,7 +10506,7 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "baseline", gap: "8px", flexWrap: "wrap" }}>
-        <h3 style={{ fontSize: fs.h3, fontWeight: 600, color: ink, margin: 0 }}>{proj.title}</h3>
+        <h3 style={{ fontSize: fs.h3, fontWeight: 700, color: ink, margin: 0 }}>{proj.title}</h3>
         {proj.url && <UrlLink url={proj.url} color={accent} fontSize={fs.small} />}
         {proj.repoUrl && <UrlLink url={proj.repoUrl} color={muted} fontSize={fs.small} />}
       </div>
@@ -10544,23 +10524,30 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
   return (
     <div className="resume-page" style={{ ...PAGE_BASE, padding: `${pad}px ${pad + 4}px` }}>
       {/* HEADER */}
-      <h1 style={{ fontSize: "30px", fontWeight: 800, letterSpacing: "-0.3px", color: ink, margin: 0, textTransform: "uppercase", lineHeight: 1.1 }}>
-        {p.fullName || "Your Name"}
-      </h1>
-      {p.title && <div style={{ fontSize: "14px", color: accent, fontWeight: 600, margin: "5px 0 0" }}>{p.title}</div>}
-      {contacts.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", margin: "8px 0 0", fontSize: fs.small, color: "#374151" }}>
-          {contacts.map((c, i) => (
-            <LinkText key={i} href={contactHref(c.type, c.value)} style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontWeight: 600 }}>
-              {contactIcon(c.type, accent, 12)}
-              {contactLabel(c.type, c.value)}
-            </LinkText>
-          ))}
-        </div>
-      )}
+      <header>
+        <h1 style={{ fontSize: "31px", fontWeight: 800, letterSpacing: "-0.4px", color: ink, margin: 0, textTransform: "uppercase", lineHeight: 1.05 }}>
+          {p.fullName || "Your Name"}
+        </h1>
+        {p.title && (
+          <div style={{ fontSize: "13.5px", color: accent, fontWeight: 700, margin: "5px 0 0", textTransform: "uppercase", letterSpacing: "1.4px" }}>
+            {p.title}
+          </div>
+        )}
+        {contacts.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "7px 16px", margin: "10px 0 0", fontSize: fs.small, color: sub }}>
+            {contacts.map((c, i) => (
+              <LinkText key={i} href={contactHref(c.type, c.value)} style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontWeight: 600 }}>
+                {contactIcon(c.type, accent, 12)}
+                {contactLabel(c.type, c.value)}
+              </LinkText>
+            ))}
+          </div>
+        )}
+        <div style={{ height: "2px", borderRadius: "1px", marginTop: "12px", background: `linear-gradient(90deg, ${accent}, ${accent}22 55%, ${line})` }} />
+      </header>
 
       {/* BODY — two columns */}
-      <div style={{ display: "flex", gap: "34px", marginTop: "18px", alignItems: "flex-start" }}>
+      <div style={{ display: "flex", gap: "30px", marginTop: "16px", alignItems: "flex-start" }}>
         {/* LEFT */}
         <div style={{ flex: "1.65", minWidth: 0 }}>
           {p.summary && (
@@ -10580,12 +10567,25 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
                     paddingBottom: idx < enabledExp.length - 1 ? "11px" : 0,
                     marginBottom: idx < enabledExp.length - 1 ? "11px" : 0,
                     borderBottom: idx < enabledExp.length - 1 ? dash : "none",
+                    breakInside: "avoid",
                   }}
                 >
-                  <h3 style={{ fontSize: fs.h3, fontWeight: 600, color: ink, margin: 0 }}>{exp.title}</h3>
-                  {exp.company && <div style={{ fontSize: fs.body, fontWeight: 700, color: accent, marginTop: "1px" }}>{exp.company}</div>}
-                  <MetaRow date={range(exp.startDate, exp.endDate, exp.isCurrent)} location={exp.location} />
-                  {exp.description && <p style={{ fontSize: fs.body, color: sub, lineHeight: 1.5, margin: "0 0 3px" }}>{exp.description}</p>}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px" }}>
+                    <h3 style={{ fontSize: fs.h3, fontWeight: 700, color: ink, margin: 0 }}>{exp.title}</h3>
+                    {range(exp.startDate, exp.endDate, exp.isCurrent) && (
+                      <span style={{ fontSize: fs.small, color: muted, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>
+                        {range(exp.startDate, exp.endDate, exp.isCurrent)}
+                      </span>
+                    )}
+                  </div>
+                  {(exp.company || exp.location) && (
+                    <div style={{ fontSize: fs.body, marginTop: "1px" }}>
+                      {exp.company && <span style={{ fontWeight: 700, color: accent }}>{exp.company}</span>}
+                      {exp.company && exp.location && <span style={{ color: faint }}>{"  •  "}</span>}
+                      {exp.location && <span style={{ color: muted }}>{exp.location}</span>}
+                    </div>
+                  )}
+                  {exp.description && <p style={{ fontSize: fs.body, color: sub, lineHeight: 1.5, margin: "4px 0 3px" }}>{exp.description}</p>}
                   <Bullets items={exp.achievements} />
                 </div>
               ))}
@@ -10650,13 +10650,13 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
                             key={i}
                             style={{
                               fontSize: fs.small,
-                              color: "#374151",
-                              backgroundColor: `${accent}12`,
-                              border: `1px solid ${accent}26`,
-                              padding: "2px 8px",
-                              borderRadius: "4px",
-                              fontWeight: 500,
-                              lineHeight: 1.45,
+                              color: ink,
+                              backgroundColor: accentSoft,
+                              border: `1px solid ${accentBorder}`,
+                              padding: "2.5px 9px",
+                              borderRadius: "5px",
+                              fontWeight: 600,
+                              lineHeight: 1.4,
                               whiteSpace: "nowrap",
                             }}
                           >
@@ -10682,12 +10682,18 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
                     borderBottom: idx < enabledEdu.length - 1 ? dash : "none",
                   }}
                 >
-                  <h3 style={{ fontSize: fs.h3, fontWeight: 600, color: ink, margin: 0 }}>
-                    {edu.degree}
-                    {edu.field ? ` (${edu.field})` : ""}
-                  </h3>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px" }}>
+                    <h3 style={{ fontSize: fs.h3, fontWeight: 700, color: ink, margin: 0 }}>
+                      {edu.degree}
+                      {edu.field ? ` (${edu.field})` : ""}
+                    </h3>
+                    {range(edu.startDate, edu.endDate) && (
+                      <span style={{ fontSize: fs.small, color: muted, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>
+                        {range(edu.startDate, edu.endDate)}
+                      </span>
+                    )}
+                  </div>
                   {edu.institution && <div style={{ fontSize: fs.body, fontWeight: 700, color: accent, marginTop: "1px" }}>{edu.institution}</div>}
-                  <MetaRow date={range(edu.startDate, edu.endDate)} />
                   <Bullets items={edu.achievements} />
                 </div>
               ))}
@@ -10728,9 +10734,9 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
 
       {/* PROJECTS — full width, alternating across two columns */}
       {enabledProjects.length > 0 && (
-        <section style={{ marginTop: "20px" }}>
+        <section style={{ marginTop: "6px" }}>
           <SectionHead>Projects</SectionHead>
-          <div style={{ display: "flex", gap: "34px", alignItems: "flex-start" }}>
+          <div style={{ display: "flex", gap: "30px", alignItems: "flex-start" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               {leftProjects.map((proj, i) => (
                 <ProjectCard key={proj.id} proj={proj} isLast={i === leftProjects.length - 1} />
