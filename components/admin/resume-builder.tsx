@@ -1755,6 +1755,11 @@ export function ResumeBuilder({ data }: { data: any }) {
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       {
+                        id: "prestige",
+                        name: "Prestige",
+                        desc: "Elegant grayscale, diamond accents",
+                      },
+                      {
                         id: "spotlight",
                         name: "Spotlight",
                         desc: "Two-column, key achievements",

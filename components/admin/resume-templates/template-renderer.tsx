@@ -521,7 +521,7 @@ function InvestorReadyTemplate({ config, accent }: { config: ResumeConfig; accen
         <p style={{ fontSize: "0.95rem", margin: "0 0 1.5rem 0", color: "#666" }}>{config.profile.title}</p>
         {config.profile.summary && <p style={{ color: "#555", lineHeight: "1.8" }}>{config.profile.summary}</p>}
       </div>
-      <div style={{ flex: "1", padding: "2.5rem 2rem", backgroundColor: white, borderLeft: `6px solid ${accent}` }}>
+      <div style={{ flex: "1", padding: "2.5rem 2rem", backgroundColor: "white", borderLeft: `6px solid ${accent}` }}>
         {config.experiences.filter((e) => e.enabled).length > 0 && (
           <section>
             <h2 style={{ color: accent, fontWeight: "bold", marginBottom: "1rem" }}>Leadership Experience</h2>

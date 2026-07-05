@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { Play, Square } from "lucide-react"
 
 interface SpeakingIntroProps {
@@ -26,6 +26,12 @@ interface SpeakingIntroProps {
 }
 
 export function SpeakingIntro({ idle, lines, metrics = [] }: SpeakingIntroProps) {
+  // Honor prefers-reduced-motion, but only after mount so the first client render
+  // still matches the (full-motion) SSR markup and doesn't trip a hydration error.
+  const prefersReduced = useReducedMotion() ?? false
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  const reduced = mounted && prefersReduced
   const [playing, setPlaying] = useState(false)
   const [active, setActive] = useState(-1)
   const [canSpeak, setCanSpeak] = useState(false)
@@ -115,10 +121,10 @@ export function SpeakingIntro({ idle, lines, metrics = [] }: SpeakingIntroProps)
         <AnimatePresence mode="wait">
           <motion.p
             key={active}
-            initial={{ opacity: 0, y: 12, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            initial={reduced ? false : { opacity: 0, y: 12, filter: "blur(6px)" }}
+            animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={reduced ? { opacity: 0 } : { opacity: 0, y: -10, filter: "blur(6px)" }}
+            transition={{ duration: reduced ? 0.2 : 0.45, ease: [0.16, 1, 0.3, 1] }}
             className="text-center text-base leading-relaxed sm:text-lg lg:text-left"
             style={{ color: active >= 0 ? "#f5ede6" : "rgba(245,237,230,0.78)" }}
           >
@@ -141,7 +147,7 @@ export function SpeakingIntro({ idle, lines, metrics = [] }: SpeakingIntroProps)
             <Play className="h-3.5 w-3.5" fill="#1a0a04" />
           )}
           {playing ? "Stop" : "Play intro"}
-          {playing && <Equalizer />}
+          {playing && <Equalizer reduced={reduced} />}
         </button>
 
         <div className="flex items-center gap-1.5" aria-hidden>
@@ -165,9 +171,9 @@ export function SpeakingIntro({ idle, lines, metrics = [] }: SpeakingIntroProps)
           {metrics.map((m, i) => (
             <motion.span
               key={m}
-              initial={{ opacity: 0, y: 10 }}
+              initial={reduced ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 + i * 0.08 }}
+              transition={reduced ? { duration: 0 } : { duration: 0.5, delay: 0.6 + i * 0.08 }}
               className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur-md"
               style={{
                 background: "rgba(255,255,255,0.05)",
@@ -185,17 +191,17 @@ export function SpeakingIntro({ idle, lines, metrics = [] }: SpeakingIntroProps)
   )
 }
 
-/** Tiny animated equalizer shown while speaking. */
-function Equalizer() {
+/** Tiny animated equalizer shown while speaking. Static under reduced-motion. */
+function Equalizer({ reduced = false }: { reduced?: boolean }) {
   return (
     <span className="ml-1 flex h-4 items-end gap-0.5" aria-hidden>
       {[0, 1, 2, 3].map((i) => (
         <motion.span
           key={i}
           className="w-0.5 rounded-full"
-          style={{ background: "#1a0a04", height: "30%" }}
-          animate={{ height: ["30%", "100%", "45%", "85%", "30%"] }}
-          transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut", delay: i * 0.12 }}
+          style={{ background: "#1a0a04", height: reduced ? "70%" : "30%" }}
+          animate={reduced ? undefined : { height: ["30%", "100%", "45%", "85%", "30%"] }}
+          transition={reduced ? undefined : { duration: 0.9, repeat: Infinity, ease: "easeInOut", delay: i * 0.12 }}
         />
       ))}
     </span>

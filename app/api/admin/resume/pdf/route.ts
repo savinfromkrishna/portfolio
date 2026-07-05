@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     ].join("\n")
 
     const fontLink =
-      "https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Georgia:wght@400;700&family=Calibri:wght@400;700&family=Monaco&family=Courier+New:wght@400;700&display=swap"
+      "https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Dancing+Script:wght@600;700&family=Georgia:wght@400;700&family=Calibri:wght@400;700&family=Monaco&family=Courier+New:wght@400;700&display=swap"
 
     const fullHtml =
       "<!DOCTYPE html><html><head>" +

@@ -43,7 +43,13 @@ export function Magnetic({
   embers?: boolean
   className?: string
 }) {
-  const reduce = useReducedMotion()
+  const prefersReduce = useReducedMotion()
+  // Gate behind mount so the first client render matches the SSR markup — the
+  // reduce-conditional `style` below would otherwise mismatch on hydration for
+  // reduced-motion users.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  const reduce = mounted ? !!prefersReduce : false
   const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const x = useMotionValue(0)

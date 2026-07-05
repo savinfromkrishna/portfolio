@@ -38,6 +38,7 @@ export function Akasha3DMount({
   const [ok, setOk] = useState(false)
   const [shown, setShown] = useState(false)
   const [size, setSize] = useState({ w: 0, h: 0 })
+  const [active, setActive] = useState(true)
 
   useEffect(() => {
     if (!webglAvailable()) return
@@ -61,6 +62,28 @@ export function Akasha3DMount({
     }
   }, [size, shown])
 
+  // Pause the render loop when the field is scrolled offscreen or the tab is
+  // hidden — never burn GPU/battery on particles nobody can see.
+  useEffect(() => {
+    const el = hostRef.current
+    if (!el || !ok) return
+    let inView = true
+    const apply = () => setActive(inView && !document.hidden)
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.isIntersecting
+        apply()
+      },
+      { threshold: 0 },
+    )
+    io.observe(el)
+    document.addEventListener("visibilitychange", apply)
+    return () => {
+      io.disconnect()
+      document.removeEventListener("visibilitychange", apply)
+    }
+  }, [ok])
+
   return (
     <div
       ref={hostRef}
@@ -68,7 +91,7 @@ export function Akasha3DMount({
       style={{ opacity: shown ? 1 : 0, transition: "opacity 1.4s ease" }}
     >
       {ok && size.w > 0 && size.h > 0 && (
-        <Akasha3D progressRef={progressRef} width={size.w} height={size.h} />
+        <Akasha3D progressRef={progressRef} width={size.w} height={size.h} active={active} />
       )}
     </div>
   )

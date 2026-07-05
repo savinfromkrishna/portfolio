@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { CinematicHero } from "@/components/sections/cinematic-hero"
+import { WebglHero } from "@/components/sections/webgl-hero"
 import { ClientsSection } from "@/components/sections/clients-section"
 import { MetricsSection } from "@/components/sections/metrics-section"
 import { ScrollProjectsSection } from "@/components/sections/scroll-projects-section"
@@ -79,7 +79,7 @@ export default async function HomePage() {
   // Map section IDs to their rendered components
   const sectionComponents: Record<string, React.ReactNode> = {
     hero: show("hero") ? (
-      <CinematicHero
+      <WebglHero
         key="hero"
         developerName={siteSettings?.developer_name || "Akash Vishwakarma"}
         professionalTitle={siteSettings?.professional_title || "Full-Stack Developer"}

@@ -10370,6 +10370,483 @@ function MosaicGridTemplate({ config }: { config: ResumeConfig }) {
 }
 
 /* ═══════════════════════════════════════════════
+   PRESTIGE TEMPLATE
+   Classic elegant grayscale résumé (Canva "Modern &
+   Professional" style): centered wide-tracked name above two
+   hairline rules that frame the title, a narrow left column (Contact with boxed
+   icons / Skills / Education / Languages with diamond ratings)
+   and a wide right column (Profile / Work Experience), split by
+   a vertical rule ornamented with diamonds. Monochrome by
+   design — intentionally ignores accentColor to stay faithful.
+   ═══════════════════════════════════════════════ */
+function PrestigeTemplate({ config }: { config: ResumeConfig }) {
+  const p = config.profile
+  const pad = config.pagePadding ?? 40
+
+  // Monochrome palette — matches the reference exactly.
+  const ink = "#3d3d3d" // name, headings, diamonds, icons, bullets
+  const head = "#333333" // section headings (slightly heavier)
+  const sub = "#565656" // body copy
+  const muted = "#7a7a7a" // dates / secondary
+  const rule = "#454545" // header hairlines + vertical divider
+  // Dashed separators drawn with a repeating gradient (4px dash / 7px gap) —
+  // CSS `border: dashed` gaps are too tight to read as dotted.
+  const sepLine: React.CSSProperties = {
+    backgroundImage: "repeating-linear-gradient(90deg, #cfcfcf 0, #cfcfcf 4px, transparent 4px, transparent 11px)",
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "100% 1px",
+  }
+  const diamondOff = "#d6d6d6" // empty language diamond
+
+  const enabledExp = config.experiences.filter((e) => e.enabled)
+  const enabledEdu = config.education.filter((e) => e.enabled)
+  const enabledCerts = config.certifications.filter((c) => c.enabled)
+  const enabledProjects = config.projects.filter((pr) => pr.enabled)
+  const skills = config.skillCategories.flatMap((c) => c.skills).filter(Boolean)
+  // Only SPOKEN-language sections get the diamond treatment — a "Programming
+  // Languages" section must stay an ordinary list in the right column.
+  const isSpokenLang = (t: string) => /language/i.test(t) && !/programming|coding|tech|computer|script/i.test(t)
+  const langSections = config.customSections.filter((cs) => isSpokenLang(cs.title))
+  const otherCustom = config.customSections.filter(
+    (cs) => !isSpokenLang(cs.title) && !/declaration/i.test(cs.title)
+  )
+  const declItems = config.customSections
+    .filter((cs) => /declaration/i.test(cs.title))
+    .flatMap((cs) => cs.items.map((i) => i.content))
+  const declarationText = declItems.length
+    ? declItems.join(" ")
+    : "I hereby declare that all the information furnished above is true and correct to the best of my knowledge and belief."
+
+  // Type scale — resume-standard sizes (body ≈ 10pt) driven by the shared
+  // Design-tab font-size control, exactly like the other templates. Layout
+  // stays compact via tight margins, not tiny type.
+  const fsz = getFontSize(config.fontSize)
+  const T = { head: fsz.h2, h3: fsz.h3, body: fsz.body, small: fsz.small }
+  const script = "'Dancing Script', 'Segoe Script', 'Brush Script MT', cursive"
+
+  // Ordered to mirror the reference: phone, email, website, location, …
+  const contacts = [
+    { type: "phone", value: p.phone },
+    { type: "email", value: p.email },
+    { type: "website", value: p.website },
+    { type: "location", value: p.location },
+    { type: "linkedin", value: p.linkedin },
+    { type: "github", value: p.github },
+  ].filter((c) => c.value)
+
+  const contactText = (type: string, value: string) => {
+    if (type === "linkedin") return "LinkedIn"
+    if (type === "github") return "GitHub"
+    return value.replace(/^https?:\/\//, "")
+  }
+
+  // Classic year-only ranges ("2020 - 2022") to match the reference.
+  const yr = (str: string) => {
+    if (!str) return ""
+    const d = new Date(str)
+    return isNaN(d.getTime()) ? str : String(d.getFullYear())
+  }
+  const range = (start: string, end: string, current?: boolean) => {
+    const a = yr(start)
+    const b = current ? "Present" : yr(end)
+    return a && b ? `${a} - ${b}` : a || b || ""
+  }
+
+  const splitItem = (content: string): { head: string; body: string } => {
+    const m = content.match(/^(.*?)(?:\s[—–-]\s|:\s)([\s\S]+)$/)
+    if (m && m[1].trim().length <= 60) return { head: m[1].trim(), body: m[2].trim() }
+    return { head: "", body: content }
+  }
+  const levelCount = (level: string) => {
+    const l = level.toLowerCase()
+    if (/native|fluent|mother/.test(l)) return 5
+    if (/advanced|proficient/.test(l)) return 4
+    if (/intermediate|working/.test(l)) return 3
+    if (/basic|beginner|elementary/.test(l)) return 2
+    return 3
+  }
+
+  // ── Shared pieces ──
+  const SectionHead = ({ children, first }: { children: React.ReactNode; first?: boolean }) => (
+    <h2
+      style={{
+        fontSize: T.head,
+        fontWeight: 700,
+        letterSpacing: "0.14em",
+        textTransform: "uppercase",
+        color: head,
+        margin: first ? "0 0 8px" : "15px 0 8px",
+        breakInside: "avoid",
+      }}
+    >
+      {children}
+    </h2>
+  )
+
+  const Diamond = ({ on }: { on: boolean }) => (
+    <span
+      style={{
+        width: "7px",
+        height: "7px",
+        backgroundColor: on ? ink : diamondOff,
+        transform: "rotate(45deg)",
+        display: "inline-block",
+        flexShrink: 0,
+      }}
+    />
+  )
+
+  const Bullets = ({ items, small }: { items: string[]; small?: boolean }) =>
+    items && items.length ? (
+      <ul style={{ margin: "5px 0 0", padding: 0, listStyle: "none" }}>
+        {items.map((it, i) => (
+          <li
+            key={i}
+            style={{ display: "flex", gap: "8px", fontSize: small ? T.small : T.body, color: sub, lineHeight: 1.5, marginBottom: "3px", breakInside: "avoid" }}
+          >
+            <span style={{ flexShrink: 0, marginTop: small ? "6px" : "7px", width: "4px", height: "4px", borderRadius: "50%", backgroundColor: ink }} />
+            <span style={{ minWidth: 0 }}>{it}</span>
+          </li>
+        ))}
+      </ul>
+    ) : null
+
+  // Vertical center divider with evenly distributed diamonds.
+  const Divider = () => (
+    <div style={{ position: "relative", width: "1px", backgroundColor: rule, alignSelf: "stretch", flexShrink: 0 }}>
+      {[12, 36, 60, 84].map((top) => (
+        <span
+          key={top}
+          style={{
+            position: "absolute",
+            top: `${top}%`,
+            left: "50%",
+            width: "10px",
+            height: "10px",
+            backgroundColor: ink,
+            transform: "translate(-50%, -50%) rotate(45deg)",
+          }}
+        />
+      ))}
+    </div>
+  )
+
+  return (
+    <div className="resume-page" style={{ ...PAGE_BASE, padding: "12px" }}>
+      {/* Handwriting webfont for the declaration signature (live preview; the
+          PDF route loads it in its own <head> too). */}
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap"
+      />
+      {/* Content wrapper — BLOCK flow (not flex) so `break-before: page` on
+          the full-width Projects section is honored in the PDF; the min-height
+          keeps page one filled even when content is short. */}
+      <div style={{ minHeight: "calc(297mm - 24px)", padding: `${pad - 14}px ${pad - 10}px` }}>
+        {/* HEADER — centered name, then title framed by two hairlines */}
+        <header style={{ textAlign: "center" }}>
+          <h1
+            style={{
+              fontSize: "30px",
+              fontWeight: 400,
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: ink,
+              margin: 0,
+              paddingLeft: "0.2em",
+              lineHeight: 1.1,
+            }}
+          >
+            {p.fullName || "Your Name"}
+          </h1>
+          <div style={{ height: "1px", backgroundColor: rule, margin: "10px 0" }} />
+          {p.title && (
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                letterSpacing: "0.34em",
+                textTransform: "uppercase",
+                color: sub,
+                paddingLeft: "0.34em",
+              }}
+            >
+              {p.title}
+            </div>
+          )}
+          {p.title && <div style={{ height: "1px", backgroundColor: rule, margin: "10px 0 0" }} />}
+        </header>
+
+        {/* SECTION 1 — two columns split by the diamond divider */}
+        <div style={{ display: "flex", gap: "28px", marginTop: "13px", alignItems: "stretch" }}>
+          {/* LEFT COLUMN */}
+          <aside style={{ width: "37%", flexShrink: 0, minWidth: 0 }}>
+            {contacts.length > 0 && (
+              <section>
+                <SectionHead first>Contact</SectionHead>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {contacts.map((c, i) => (
+                    <LinkText
+                      key={i}
+                      href={contactHref(c.type, c.value)}
+                      style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: T.body, color: sub, lineHeight: 1.3 }}
+                    >
+                      <span
+                        style={{
+                          width: "21px",
+                          height: "21px",
+                          border: `1.3px solid ${ink}`,
+                          borderRadius: "4px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {contactIcon(c.type, ink, 11)}
+                      </span>
+                      <span style={{ minWidth: 0, wordBreak: "break-word" }}>{contactText(c.type, c.value)}</span>
+                    </LinkText>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {skills.length > 0 && (
+              <section>
+                <div style={{ ...sepLine, backgroundPosition: "top left", marginTop: "12px", paddingTop: "12px" }}>
+                  <SectionHead first>Skills</SectionHead>
+                  {/* Pills wrap horizontally so the section stays short. */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                    {skills.map((sk, i) => (
+                      <span
+                        key={i}
+                        style={{ fontSize: T.small, color: sub, border: "1px solid #d8d8d8", borderRadius: "3px", padding: "2px 7px", lineHeight: 1.4, breakInside: "avoid" }}
+                      >
+                        {sk}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {enabledEdu.length > 0 && (
+              <section>
+                <div style={{ ...sepLine, backgroundPosition: "top left", marginTop: "12px", paddingTop: "12px" }}>
+                  <SectionHead first>Education</SectionHead>
+                  {/* Diamond timeline — mirrors the center-divider motif. Rail at the
+                      left, one diamond node per entry, date up top as a tracked kicker,
+                      degree as the primary line, institution beneath it. */}
+                  <div style={{ borderLeft: "1px solid #d9d9d9", paddingLeft: "14px", display: "flex", flexDirection: "column", gap: "13px" }}>
+                    {enabledEdu.map((edu) => (
+                      <div key={edu.id} style={{ position: "relative", breakInside: "avoid" }}>
+                        <span style={{ position: "absolute", left: "-18px", top: "4px", width: "7px", height: "7px", backgroundColor: ink, transform: "rotate(45deg)" }} />
+                        {range(edu.startDate, edu.endDate) && (
+                          <div style={{ fontSize: T.small, color: muted, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                            {range(edu.startDate, edu.endDate)}
+                          </div>
+                        )}
+                        {edu.degree && (
+                          <div style={{ fontSize: T.body, fontWeight: 700, color: ink, marginTop: "2px", lineHeight: 1.35 }}>
+                            {edu.degree}
+                            {edu.field ? `, ${edu.field}` : ""}
+                          </div>
+                        )}
+                        {edu.institution && (
+                          <div style={{ fontSize: T.small, fontWeight: 600, color: sub, marginTop: "1px", lineHeight: 1.4 }}>
+                            {edu.institution}
+                          </div>
+                        )}
+                        {edu.description && <p style={{ fontSize: T.small, color: sub, lineHeight: 1.5, margin: "3px 0 0" }}>{edu.description}</p>}
+                        <Bullets items={edu.achievements} small />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {langSections.map((cs) => (
+              <section key={cs.id}>
+                <div style={{ ...sepLine, backgroundPosition: "top left", marginTop: "12px", paddingTop: "12px" }}>
+                  <SectionHead first>{cs.title}</SectionHead>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {cs.items.map((it) => {
+                      const { head: h, body } = splitItem(it.content)
+                      const name = h || body
+                      const level = h ? body : ""
+                      const count = levelCount(level)
+                      return (
+                        <div key={it.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                          <div style={{ minWidth: 0 }}>
+                            <span style={{ fontSize: T.body, color: sub }}>{name}</span>
+                            {/* Level as real text too, so the PDF text layer / ATS keeps it. */}
+                            {level && <span style={{ fontSize: T.small, color: muted, marginLeft: "6px" }}>{level}</span>}
+                          </div>
+                          {/* No stated level → no diamonds; never invent a rating. */}
+                          {level && (
+                            <span style={{ display: "flex", gap: "3px", flexShrink: 0 }}>
+                              {[0, 1, 2, 3, 4].map((i) => (
+                                <Diamond key={i} on={i < count} />
+                              ))}
+                            </span>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </section>
+            ))}
+
+            {enabledCerts.length > 0 && (
+              <section>
+                <div style={{ ...sepLine, backgroundPosition: "top left", marginTop: "12px", paddingTop: "12px" }}>
+                  <SectionHead first>Certifications</SectionHead>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+                    {enabledCerts.map((cert) => (
+                      <div key={cert.id} style={{ breakInside: "avoid" }}>
+                        <div style={{ fontSize: T.body, fontWeight: 700, color: ink, lineHeight: 1.35 }}>{cert.name}</div>
+                        {(cert.issuer || cert.date) && (
+                          <div style={{ fontSize: T.small, color: muted, marginTop: "1px" }}>
+                            {[cert.issuer, cert.date ? formatDisplayDate(cert.date) : ""].filter(Boolean).join(" • ")}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
+          </aside>
+
+          <Divider />
+
+          {/* RIGHT COLUMN */}
+          <main style={{ flex: 1, minWidth: 0 }}>
+            {p.summary && (
+              <section>
+                <SectionHead first>Profile</SectionHead>
+                <p style={{ fontSize: T.body, color: sub, lineHeight: 1.55, margin: 0, textAlign: "justify" }}>{p.summary}</p>
+              </section>
+            )}
+
+            {enabledExp.length > 0 && (
+              <section>
+                <SectionHead first={!p.summary}>Work Experience</SectionHead>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {enabledExp.map((exp) => (
+                    <div key={exp.id} style={{ breakInside: "avoid" }}>
+                      <h3 style={{ fontSize: T.h3, fontWeight: 700, color: ink, margin: 0, lineHeight: 1.25 }}>{exp.title}</h3>
+                      {(exp.company || exp.location || range(exp.startDate, exp.endDate, exp.isCurrent)) && (
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px", marginTop: "2px" }}>
+                          <span style={{ fontSize: T.body, color: sub }}>
+                            {[exp.company, exp.location].filter(Boolean).join(", ")}
+                          </span>
+                          {range(exp.startDate, exp.endDate, exp.isCurrent) && (
+                            <span style={{ fontSize: T.body, color: muted, whiteSpace: "nowrap", flexShrink: 0 }}>
+                              {range(exp.startDate, exp.endDate, exp.isCurrent)}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {exp.description && <p style={{ fontSize: T.body, color: sub, lineHeight: 1.5, margin: "4px 0 0" }}>{exp.description}</p>}
+                      <Bullets items={exp.achievements} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {otherCustom.map((cs) => (
+              <section key={cs.id}>
+                <SectionHead>{cs.title}</SectionHead>
+                <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+                  {cs.items.map((it) => {
+                    const { head: h, body } = splitItem(it.content)
+                    return (
+                      <div key={it.id} style={{ breakInside: "avoid" }}>
+                        {h && <div style={{ fontSize: T.body, fontWeight: 700, color: ink }}>{h}</div>}
+                        <p style={{ fontSize: T.body, color: sub, lineHeight: 1.45, margin: 0 }}>{body}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            ))}
+          </main>
+        </div>
+
+        {/* SECTION 2 — PROJECTS: full width on a fresh page, single column
+            (never two-column). `break-before: page` forces the fresh page in
+            the PDF; on the continuous screen preview it simply flows below. */}
+        {enabledProjects.length > 0 && (
+          <section style={{ breakBefore: "page", pageBreakBefore: "always", marginTop: "18px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "15px", breakInside: "avoid" }}>
+              <span style={{ flex: 1, height: "1px", backgroundColor: rule }} />
+              <h2 style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: head, margin: 0, paddingLeft: "0.3em" }}>
+                Projects
+              </h2>
+              <span style={{ flex: 1, height: "1px", backgroundColor: rule }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              {enabledProjects.map((proj, idx) => (
+                <div
+                  key={proj.id}
+                  style={{
+                    ...(idx < enabledProjects.length - 1
+                      ? { ...sepLine, backgroundPosition: "bottom left", paddingBottom: "15px" }
+                      : {}),
+                    breakInside: "avoid",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "8px", flexWrap: "wrap", minWidth: 0 }}>
+                      <h3 style={{ fontSize: T.h3, fontWeight: 700, color: ink, margin: 0 }}>{proj.title}</h3>
+                      {proj.url && <UrlLink url={proj.url} color={ink} fontSize={T.small} />}
+                      {proj.repoUrl && <UrlLink url={proj.repoUrl} color={muted} fontSize={T.small} />}
+                    </div>
+                    {range(proj.startDate, proj.endDate, proj.isCurrent) && (
+                      <span style={{ fontSize: T.small, color: muted, whiteSpace: "nowrap", flexShrink: 0 }}>
+                        {range(proj.startDate, proj.endDate, proj.isCurrent)}
+                      </span>
+                    )}
+                  </div>
+                  {proj.role && <div style={{ fontSize: T.body, fontWeight: 700, color: sub, marginTop: "1px" }}>{proj.role}</div>}
+                  {proj.description && <p style={{ fontSize: T.body, color: sub, lineHeight: 1.5, margin: "4px 0 0" }}>{proj.description}</p>}
+                  <Bullets items={proj.achievements} />
+                  {proj.techStack.length > 0 && (
+                    <div style={{ fontSize: T.small, color: muted, marginTop: "5px" }}>
+                      <strong style={{ color: ink }}>Tech:</strong> {proj.techStack.join(", ")}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* SECTION 3 — DECLARATION with handwritten signature, at the very end */}
+        <section style={{ marginTop: "22px", breakInside: "avoid" }}>
+          <SectionHead>Declaration</SectionHead>
+          <p style={{ fontSize: T.body, color: sub, lineHeight: 1.55, margin: 0 }}>{declarationText}</p>
+          <div style={{ marginTop: "16px" }}>
+            <div style={{ fontSize: T.small, letterSpacing: "0.2em", textTransform: "uppercase", color: sub }}>Sincerely,</div>
+            <div style={{ fontFamily: script, fontSize: "34px", fontWeight: 600, color: ink, lineHeight: 1, margin: "6px 0 4px" }}>
+              {p.fullName || "Your Name"}
+            </div>
+            <div style={{ fontSize: T.small, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, color: ink }}>
+              {p.fullName || "Your Name"}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════
    SPOTLIGHT TEMPLATE
    "Double column" layout (Enhancv-style): bold uppercase
    name, blue title, contact row with icons, then a wide
@@ -10763,6 +11240,8 @@ function SpotlightTemplate({ config }: { config: ResumeConfig }) {
 export function ResumePreview({ config }: { config: ResumeConfig }) {
   switch (config.template) {
     // Original Templates
+    case "prestige":
+      return <PrestigeTemplate config={config} />
     case "spotlight":
       return <SpotlightTemplate config={config} />
     case "modern":

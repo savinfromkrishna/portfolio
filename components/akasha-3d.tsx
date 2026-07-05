@@ -26,10 +26,12 @@ import { akashaVertexShader, akashaFragmentShader } from "@/lib/akasha-glsl"
 const RADIUS = 2.0
 
 function colorTriplet(dark: boolean) {
-  // violet → magenta → cyan, sampled from the site's accent palette.
+  // Fire / ember ramp — ember-red → orange → gold, matching the site's accent
+  // gradient (#ff4d2e → #ff7a18 → #ffd24a). Colours are pushed bright because
+  // additive blending on the near-black hero sums toward white in the hot core.
   return dark
-    ? [new THREE.Color("#6f6dff"), new THREE.Color("#c484ff"), new THREE.Color("#78d2f5")]
-    : [new THREE.Color("#5a4fe0"), new THREE.Color("#9646dc"), new THREE.Color("#1f8fcf")]
+    ? [new THREE.Color("#e8431f"), new THREE.Color("#ff7a18"), new THREE.Color("#ffd98a")]
+    : [new THREE.Color("#d1360f"), new THREE.Color("#f26a0c"), new THREE.Color("#ffcf5c")]
 }
 
 function AkashaPoints({
@@ -142,10 +144,13 @@ export default function Akasha3D({
   progressRef,
   width,
   height,
+  active = true,
 }: {
   progressRef: React.MutableRefObject<number>
   width: number
   height: number
+  /** false when the field is scrolled offscreen / tab hidden — pauses the loop */
+  active?: boolean
 }) {
   const pointerRef = useRef({ x: 0, y: 0 })
   const reduced =
@@ -182,7 +187,7 @@ export default function Akasha3D({
       camera={{ position: [0, 0, 6], fov: 55 }}
       dpr={[1, 2]}
       resize={{ offsetSize: true }}
-      frameloop={reduced ? "demand" : "always"}
+      frameloop={reduced ? "demand" : active ? "always" : "never"}
     >
       <Resizer width={width} height={height} />
       <AkashaPoints count={count} progressRef={progressRef} pointerRef={pointerRef} reduced={reduced} />
